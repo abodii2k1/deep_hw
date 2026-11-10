@@ -144,9 +144,6 @@ accuracy.
 part3_q1 = r"""
 **Your answer:**
 
-<!-- NOTE: check the description of the plots against your actual residual
-plots and the MSE / R^2 values you got. -->
-
 The ideal residual plot shows the residuals $e^{(i)} = y^{(i)} - \hat{y}^{(i)}$
 **randomly scattered around the horizontal line $e=0$**, in a narrow band of
 roughly constant width across all predicted values $\hat{y}$, with no visible
@@ -154,19 +151,27 @@ pattern (no curve, no funnel shape, no clusters). This means the errors are
 small, unbiased, and do not depend on the prediction, so the model has captured
 the structure in the data and what remains is noise.
 
-In the plot for the **top-5 features** model, the residuals are spread fairly
-widely and show a clear pattern: a curved (U-like) shape and several large
-residuals, especially for high predicted prices. This shows that a linear
-function of those 5 features cannot capture the non-linear relationships in the
-data (the model underfits), as reflected in its relatively high MSE and lower
-$R^2$.
+In the plot for the **top-5 features** model ($MSE=27.20$, $R^2=0.68$), the
+residuals are spread fairly widely (the $\pm\sigma$ band is about $\pm 5$) and
+they are not random: the errors depend on $\hat{y}$. At high predicted prices
+($\hat{y}\approx 35$-$42$) the points form a straight diagonal line of large
+errors, and there are a few very large errors (about $30$) around
+$\hat{y}\approx 20$. These are mostly the houses whose price is capped at the
+maximum value ($50$) in the dataset, which the model strongly under-predicts.
+This structure shows that a linear function of those 5 features cannot capture
+the non-linear relationships in the data, so the model underfits.
 
 In the **final plot after adding non-linear features and selecting
-hyperparameters with CV**, the residuals are much closer to zero and more
-evenly scattered around $e=0$, with less structure and fewer outliers, and the
-train and test points behave similarly. The model fits much better (lower MSE,
-higher $R^2$) and, since the test residuals look like the train residuals, it
-generalizes well and is not strongly over-fitting.
+hyperparameters with CV** (best: degree $2$, $\lambda\approx 0.43$), the fit is
+much better: train $MSE=7.82$, $R^2=0.91$ and test $MSE=14.01$, $R^2=0.80$.
+The residuals are much closer to zero (the band is about $\pm 3$), more evenly
+scattered around $e=0$ over the whole range of $\hat{y}$, and the train and test
+points are mixed in the same band, so the model generalizes reasonably well.
+The test MSE is higher than the train MSE, but most of that gap comes from a
+single test outlier with a residual of about $24$ (it alone adds about $5.6$ to
+the test MSE over $102$ test samples). Without it the test error is close to
+the train error, so the model is not strongly over-fitting. A few large
+residuals remain, again mainly for the capped high-price houses.
 """
 
 part3_q2 = r"""
