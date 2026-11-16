@@ -50,14 +50,23 @@ class SVMHingeLoss(ClassifierLoss):
         #    Hint: Create a matrix M where M[i,j] is the margin-loss
         #    for sample i and class j (i.e. s_j - s_{y_i} + delta).
 
-        loss = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        N, C = x_scores.shape
+        correct_scores = x_scores[torch.arange(N), y].unsqueeze(1)
+
+        M = x_scores - correct_scores + self.delta
+
+        is_correct = torch.arange(C).unsqueeze(0) == y.unsqueeze(1)
+
+        hinge = torch.clamp(M, min=0) * (~is_correct)
+        loss = hinge.sum() / N
         # ========================
 
         # TODO: Save what you need for gradient calculation in self.grad_ctx
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.grad_ctx["x"] = x
+        self.grad_ctx["M"] = M.detach()
+        self.grad_ctx["is_correct"] = is_correct
         # ========================
 
         return loss
@@ -73,9 +82,19 @@ class SVMHingeLoss(ClassifierLoss):
         #  Same notes as above. Hint: Use the matrix M from above, based on
         #  it create a matrix G such that X^T * G is the gradient.
 
-        grad = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        x = self.grad_ctx["x"]
+        M = self.grad_ctx["M"]
+        is_correct = self.grad_ctx["is_correct"]
+        N = x.shape[0]
+
+        # Wrong classes: 1 where the margin is violated (m_ij > 0), else 0
+        G = ((M > 0) & ~is_correct).float()
+
+        # Correct class: minus the number of violated margins in that row
+        G = G - is_correct.float() * G.sum(dim=1, keepdim=True)
+
+        grad = x.T @ G / N
         # ========================
 
         return grad
