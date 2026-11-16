@@ -88,16 +88,14 @@ regularization simply shrinks the weights towards zero.
 part2_q2 = r"""
 **Your answer:**
 
-<!-- NOTE: check this against the weight images and wrong predictions your
-notebook actually produced, and mention specific digits you saw. -->
-
 Each row $\vec{w_j}$ of the weight matrix, reshaped to the input image size,
 acts as a **template** for class $j$. The score of class $j$ is the dot product
-$\vectr{w_j}\vec{x}$, so it is high when the bright pixels of the input fall on
-the positive (bright) regions of the template and avoid the negative ones. In
-the images we can see a blurry "average" shape of each digit: for example the
-template for 0 shows a ring with a dark center, and the template for 1 shows a
-vertical stroke in the middle.
+$\vectr{w_j}\vec{x}$. Bright (positive) weights are where strokes of digit $j$
+usually appear, so ink there raises the score; dark (negative) weights are
+where strokes of other digits usually appear, so ink there lowers the score.
+In the images we can see a blurry "average" shape of each digit (for example,
+the template for 0 is a ring), because the model learns roughly the average
+picture of each class.
 
 The linear model is therefore doing **template matching**: it learns, per
 class, which pixel locations should be on and which should be off. It cannot
@@ -105,21 +103,23 @@ represent the different ways a digit can be written (it has one template per
 class), and it is sensitive to the position, thickness and slant of the
 strokes, since it compares pixel by pixel.
 
-This explains many of the errors: digits that share a lot of pixels with
-another class's template get confused, for example a 4 classified as a 9 (they
-differ only in whether the top is closed), a 7 as a 9 or 1, a 5 as a 3 or 8, or
-a digit written slanted, shifted or unusually thick that does not overlap well
-with its own class template.
+This explains the errors we got: a sample is misclassified when its strokes
+overlap another class's template more than its own. In our results, a 9 with a
+slanted, open top was classified as 4, a 7 as 9 (both have a stroke across the
+top and a long diagonal down), a 5 as 6 (its lower loop is closed, like a 6),
+and a 6, a 4 and a 2 written in unusual or slanted shapes were classified as
+2, 6 and 7. In each case the digit is written in a way that does not match the
+"average" shape of its class, and the model has only one template per class.
 """
 
 part2_q3 = r"""
 **Your answer:**
 
-<!-- NOTE: this assumes the usual result (loss drops quickly then flattens,
-train accuracy slightly above test accuracy). Check it against your graphs. -->
-
-1. **Good.** The training loss decreases quickly in the first epochs and then
-converges smoothly to a plateau, without oscillations or spikes.
+1. **Good.** The training loss drops very quickly in the first epoch (from about
+$2.4$ to about $0.8$) and then keeps decreasing more and more slowly, flattening
+out smoothly (to about $0.35$ on train and $0.46$ on validation) without
+oscillations or spikes. So training has converged within the given number of
+epochs.
    - With a **learning rate that is too low**, the loss would decrease very
    slowly and almost linearly, and would still be clearly decreasing (far from
    converged) at the end of the same number of epochs.
@@ -127,9 +127,12 @@ converges smoothly to a plateau, without oscillations or spikes.
    oscillate or jump around, possibly increase or diverge, and would not
    settle into a smooth minimum, because each step overshoots the minimum.
 
-2. **Slightly overfitted to the training set.** The training accuracy is a bit
-higher than the test accuracy, and the gap between the two curves is small and
-stable (it does not grow over the epochs). If the model were highly overfitted
+2. **Slightly overfitted to the training set.** At the end of training the
+accuracy is about $92.5\%$ on the training set, about $91\%$ on the validation
+set and $89.0\%$ on the test set. The model does a little better on the data it
+was trained on than on unseen data, but the gap is small (a few percentage
+points), and the gap between the train and validation curves stays small and
+stable over the epochs. If the model were highly overfitted
 we would see a large gap, with test accuracy stagnating or dropping while
 train accuracy keeps rising. If it were underfitted, both accuracies would be
 low and still improving, with test accuracy close to or equal to train
